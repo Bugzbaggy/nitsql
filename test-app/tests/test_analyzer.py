@@ -755,7 +755,7 @@ class TestLinkedServerDemotion:
         # A -- comment that merely mentions OPENQUERY( must NOT demote a real,
         # parameterizable injection on the following line.
         sql = (
-            "-- TODO: replace with OPENQUERY(SIMBA_BQ, 'SELECT ...')\n"
+            "-- TODO: replace with OPENQUERY(LINKED_SRV, 'SELECT ...')\n"
             "SET @sql = 'SELECT * FROM orders WHERE id = ' + @userInput + ''\n"
         )
         v = _analyze(sql, dialect="mssql")

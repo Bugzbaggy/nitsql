@@ -92,7 +92,7 @@ _LINE_COMMENT_RE = re.compile(r"--[^\r\n]*")
 #   \\.      backslash-escape (PostgreSQL E'..' / MySQL escape strings)
 #   ''       doubled-quote escape (SQL Server / standard SQL)
 # Without the '' branch, a multi-line string like
-#   SET @sql = N'SELECT * FROM OPENQUERY(SIMBA_BQ_MSG_SG, ''SELECT ...'')'
+#   SET @sql = N'SELECT * FROM OPENQUERY(LINKED_SRV, ''SELECT ...'')'
 # would be split into multiple empty strings + raw text, leaving the
 # embedded SQL in the clean variant where every other rule mis-fires on it.
 _SINGLE_QUOTED_RE = re.compile(r"'(?:[^'\\]|\\.|'')*'")

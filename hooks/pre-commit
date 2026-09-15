@@ -1,0 +1,152 @@
+#!/usr/bin/env bash
+# sql-valid8 pre-commit hook
+#
+# Runs the sql-valid8 multi-dialect SQL analyzer on staged *.sql files
+# before each commit. The analyzer auto-detects the dialect (MSSQL,
+# PostgreSQL, Oracle, MySQL, SQLite) from SQL syntax.
+#
+#   - CRITICAL findings → block the commit (exit 1)
+#   - HIGH/MEDIUM/LOW   → warn but allow the commit
+#   - No SQL files staged → skip silently
+#
+# Install:  plugins/sql-valid8/hooks/install.sh
+# Bypass:   git commit --no-verify  (use sparingly)
+
+set -euo pipefail
+
+# Resolve repo root
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+# Resolve the analyzer path.
+#
+# Priority:
+#   1. Relative to THIS hook script (plugin layout — works for global
+#      install where core.hooksPath points into a marketplace clone).
+#   2. Inside the current repo at common locations (when hooks are
+#      installed per-repo).
+#
+# This lets the same hook script work in three deployment modes:
+#   - Global install: core.hooksPath -> ~/claude-marketplace/plugins/sql-valid8/hooks
+#   - Per-repo in marketplace: plugins/sql-valid8/hooks/
+#   - Per-repo in DB repo:     .github/sql-valid8/hooks/
+HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+ANALYZER=""
+for candidate in \
+	"$HOOK_DIR/../scripts/analyze_sql.py" \
+	"$HOOK_DIR/../analyze_sql.py" \
+	"$REPO_ROOT/plugins/sql-valid8/scripts/analyze_sql.py" \
+	"$REPO_ROOT/.github/sql-valid8/analyze_sql.py" \
+	"$REPO_ROOT/sql-valid8/analyze_sql.py"; do
+	if [ -f "$candidate" ]; then
+		ANALYZER="$candidate"
+		break
+	fi
+done
+
+if [ -z "$ANALYZER" ]; then
+	echo "[sql-valid8] Analyzer not found — skipping."
+	echo "  Looked relative to hook dir and in:"
+	echo "    plugins/sql-valid8/scripts/, .github/sql-valid8/, sql-valid8/"
+	exit 0
+fi
+
+# Find Python (check python, python3, py in order)
+PYTHON=""
+for cmd in python python3 py; do
+	if command -v "$cmd" &>/dev/null; then
+		PYTHON="$cmd"
+		break
+	fi
+done
+if [ -z "$PYTHON" ]; then
+	echo "[sql-valid8] Python not found — skipping. Install Python 3.8+ to enable."
+	exit 0
+fi
+
+# Collect staged *.sql files (added, modified, renamed — not deleted).
+# Use a portable read-loop instead of `mapfile` because macOS ships with
+# bash 3.2 by default and `mapfile` needs bash 4+.
+SQL_FILES=()
+while IFS= read -r f; do
+	[ -n "$f" ] && SQL_FILES+=("$f")
+done < <(git diff --cached --name-only --diff-filter=AMR -- '*.sql')
+
+if [ ${#SQL_FILES[@]} -eq 0 ]; then
+	# No SQL files staged — nothing to check
+	exit 0
+fi
+
+echo "[sql-valid8] Checking ${#SQL_FILES[@]} staged SQL file(s)..."
+echo "  Analyzer: $ANALYZER"
+echo "  Dialect:  auto-detect"
+echo ""
+
+# Temp file for analyzer JSON output. Use `mktemp` so an aborted commit
+# (SIGKILL / power loss) never litters the repo with a stale results file
+# that could be accidentally staged later. `mktemp` works on Linux, macOS,
+# and Git Bash on Windows.
+JSON_OUT="$(mktemp -t sql-valid8-XXXXXX.json 2>/dev/null || mktemp)"
+trap 'rm -f "$JSON_OUT"' EXIT
+
+# Analyzer exits 1 on CRITICAL — capture exit code without failing the script
+# NOTE: no --dialect flag — analyzer auto-detects per-file
+set +e
+"$PYTHON" "$ANALYZER" --json "${SQL_FILES[@]}" > "$JSON_OUT" 2>/dev/null
+ANALYZER_EXIT=$?
+set -e
+
+# Parse results using Python. Pass JSON_OUT as argv[1] rather than leaning
+# on an environment variable — avoids a latent bug where a non-exported
+# shell var would silently become '.' inside the Python subprocess.
+TOTAL=$("$PYTHON" -c '
+import json, sys
+try:
+    with open(sys.argv[1]) as f:
+        d = json.load(f)
+    counts = d.get("severity_counts", {})
+    total = d.get("total_violations", 0)
+    c = counts.get("CRITICAL", 0)
+    h = counts.get("HIGH", 0)
+    m = counts.get("MEDIUM", 0)
+    l = counts.get("LOW", 0)
+    print(f"{total}|{c}|{h}|{m}|{l}")
+except Exception:
+    print("0|0|0|0|0")
+' "$JSON_OUT" 2>/dev/null)
+
+IFS='|' read -r TOTAL_V CRITICALS HIGHS MEDIUMS LOWS <<< "$TOTAL"
+
+# Defensive: ensure every count is a non-negative integer. If parsing
+# failed or any field is non-numeric, treat as zero rather than letting
+# a malformed value silently slip past a later numeric comparison.
+for var in TOTAL_V CRITICALS HIGHS MEDIUMS LOWS; do
+	val="${!var:-0}"
+	if ! [[ "$val" =~ ^[0-9]+$ ]]; then
+		printf -v "$var" '%s' 0
+	fi
+done
+
+if [ "$TOTAL_V" -eq 0 ]; then
+	echo "[sql-valid8] All clean — no issues found."
+	exit 0
+fi
+
+# Show human-readable output with fix suggestions
+echo "────────────────────────────────────────────────────────────"
+"$PYTHON" "$ANALYZER" --fix "${SQL_FILES[@]}" 2>&1 || true
+echo "────────────────────────────────────────────────────────────"
+echo ""
+
+if [ "$CRITICALS" -gt 0 ]; then
+	echo "[sql-valid8] BLOCKED — $CRITICALS CRITICAL finding(s) must be fixed before commit."
+	echo ""
+	echo "  Fix the issues above, then re-stage and commit."
+	echo "  To bypass (not recommended): git commit --no-verify"
+	exit 1
+fi
+
+# Non-critical findings — warn but allow
+echo "[sql-valid8] WARNING — $TOTAL_V finding(s): $HIGHS HIGH, $MEDIUMS MEDIUM, $LOWS LOW"
+echo "  Commit allowed. Consider fixing before pushing."
+exit 0

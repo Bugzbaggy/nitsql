@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  analyzer:
+    name: Analyzer self-test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.9', '3.12']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Analyzer runs
+        run: python scripts/analyze_sql.py --help
+
+      - name: Detects known-bad fixtures
+        run: |
+          out=$(python scripts/analyze_sql.py --json test-app/sql/ || true)
+          echo "$out" | head -40
+          if ! echo "$out" | grep -q CRITICAL; then
+            echo "::error::analyzer found no CRITICAL findings in the bad-SQL corpus"
+            exit 1
+          fi
+          echo 'Analyzer flagged the fixtures as expected.'
+
+  hooks:
+    name: Pre-commit hook tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install bats
+        run: sudo apt-get update && sudo apt-get install -y bats
+      - name: Run hook tests
+        run: bats hooks/tests/
+
+  leak-scan:
+    name: No internal identifiers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan
+        run: |
+          PAT='\b(sg|uk|us|id|st)-db[0-9]\b|wavecell|MessageSphere|WC_[A-Za-z_]+'
+          PAT="$PAT"'|cpaas|CPAAS|8x8|172\.30\.|10\.181\.|[Ss][Ii][Mm][Bb][Aa]'
+          PAT="$PAT"'|\b(DBV|MSG|DBA)-[0-9]+\b'
+          if grep -rniE "$PAT" . --exclude-dir=.git --exclude-dir=.github; then
+            echo "::error::internal identifier found"; exit 1
+          fi
+          echo 'Leak scan clean.'

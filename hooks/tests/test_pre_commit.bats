@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 #
-# Tests for plugins/sql-valid8/hooks/pre-commit
+# Tests for plugins/nitsql/hooks/pre-commit
 #
-# Run with:  bats plugins/sql-valid8/hooks/tests/test_pre_commit.bats
+# Run with:  bats plugins/nitsql/hooks/tests/test_pre_commit.bats
 #
 # Covers:
 #   - no staged files → exit 0 silently

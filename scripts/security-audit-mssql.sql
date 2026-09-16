@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - MSSQL Security Audit Script
+-- nitsql (example) - MSSQL Security Audit Script
 -- Dialect: Microsoft SQL Server / Azure SQL Database
 -- Compatible with SQL Server 2019+, Azure SQL Database, Azure SQL Managed Instance
 -- ==========================================================================
@@ -12,7 +12,7 @@
 
 SET NOCOUNT ON;
 
-PRINT '=== SQL Valid8 - MSSQL Security Audit ===';
+PRINT '=== nitsql - MSSQL Security Audit ===';
 PRINT 'Database: ' + DB_NAME();
 PRINT 'Audit Time: ' + CONVERT(VARCHAR, GETDATE(), 120);
 PRINT '';

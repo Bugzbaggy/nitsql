@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# sql-valid8 pre-commit hook
+# nitsql pre-commit hook
 #
-# Runs the sql-valid8 multi-dialect SQL analyzer on staged *.sql files
+# Runs the nitsql multi-dialect SQL analyzer on staged *.sql files
 # before each commit. The analyzer auto-detects the dialect (MSSQL,
 # PostgreSQL, Oracle, MySQL, SQLite) from SQL syntax.
 #
@@ -9,7 +9,7 @@
 #   - HIGH/MEDIUM/LOW   → warn but allow the commit
 #   - No SQL files staged → skip silently
 #
-# Install:  plugins/sql-valid8/hooks/install.sh
+# Install:  plugins/nitsql/hooks/install.sh
 # Bypass:   git commit --no-verify  (use sparingly)
 
 set -euo pipefail
@@ -26,18 +26,18 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 #      installed per-repo).
 #
 # This lets the same hook script work in three deployment modes:
-#   - Global install: core.hooksPath -> ~/claude-marketplace/plugins/sql-valid8/hooks
-#   - Per-repo in marketplace: plugins/sql-valid8/hooks/
-#   - Per-repo in DB repo:     .github/sql-valid8/hooks/
+#   - Global install: core.hooksPath -> ~/claude-marketplace/plugins/nitsql/hooks
+#   - Per-repo in marketplace: plugins/nitsql/hooks/
+#   - Per-repo in DB repo:     .github/nitsql/hooks/
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 ANALYZER=""
 for candidate in \
 	"$HOOK_DIR/../scripts/analyze_sql.py" \
 	"$HOOK_DIR/../analyze_sql.py" \
-	"$REPO_ROOT/plugins/sql-valid8/scripts/analyze_sql.py" \
-	"$REPO_ROOT/.github/sql-valid8/analyze_sql.py" \
-	"$REPO_ROOT/sql-valid8/analyze_sql.py"; do
+	"$REPO_ROOT/plugins/nitsql/scripts/analyze_sql.py" \
+	"$REPO_ROOT/.github/nitsql/analyze_sql.py" \
+	"$REPO_ROOT/nitsql/analyze_sql.py"; do
 	if [ -f "$candidate" ]; then
 		ANALYZER="$candidate"
 		break
@@ -45,9 +45,9 @@ for candidate in \
 done
 
 if [ -z "$ANALYZER" ]; then
-	echo "[sql-valid8] Analyzer not found — skipping."
+	echo "[nitsql] Analyzer not found — skipping."
 	echo "  Looked relative to hook dir and in:"
-	echo "    plugins/sql-valid8/scripts/, .github/sql-valid8/, sql-valid8/"
+	echo "    plugins/nitsql/scripts/, .github/nitsql/, nitsql/"
 	exit 0
 fi
 
@@ -60,7 +60,7 @@ for cmd in python python3 py; do
 	fi
 done
 if [ -z "$PYTHON" ]; then
-	echo "[sql-valid8] Python not found — skipping. Install Python 3.8+ to enable."
+	echo "[nitsql] Python not found — skipping. Install Python 3.8+ to enable."
 	exit 0
 fi
 
@@ -77,7 +77,7 @@ if [ ${#SQL_FILES[@]} -eq 0 ]; then
 	exit 0
 fi
 
-echo "[sql-valid8] Checking ${#SQL_FILES[@]} staged SQL file(s)..."
+echo "[nitsql] Checking ${#SQL_FILES[@]} staged SQL file(s)..."
 echo "  Analyzer: $ANALYZER"
 echo "  Dialect:  auto-detect"
 echo ""
@@ -86,7 +86,7 @@ echo ""
 # (SIGKILL / power loss) never litters the repo with a stale results file
 # that could be accidentally staged later. `mktemp` works on Linux, macOS,
 # and Git Bash on Windows.
-JSON_OUT="$(mktemp -t sql-valid8-XXXXXX.json 2>/dev/null || mktemp)"
+JSON_OUT="$(mktemp -t nitsql-XXXXXX.json 2>/dev/null || mktemp)"
 trap 'rm -f "$JSON_OUT"' EXIT
 
 # Analyzer exits 1 on CRITICAL — capture exit code without failing the script
@@ -128,7 +128,7 @@ for var in TOTAL_V CRITICALS HIGHS MEDIUMS LOWS; do
 done
 
 if [ "$TOTAL_V" -eq 0 ]; then
-	echo "[sql-valid8] All clean — no issues found."
+	echo "[nitsql] All clean — no issues found."
 	exit 0
 fi
 
@@ -139,7 +139,7 @@ echo "────────────────────────�
 echo ""
 
 if [ "$CRITICALS" -gt 0 ]; then
-	echo "[sql-valid8] BLOCKED — $CRITICALS CRITICAL finding(s) must be fixed before commit."
+	echo "[nitsql] BLOCKED — $CRITICALS CRITICAL finding(s) must be fixed before commit."
 	echo ""
 	echo "  Fix the issues above, then re-stage and commit."
 	echo "  To bypass (not recommended): git commit --no-verify"
@@ -147,6 +147,6 @@ if [ "$CRITICALS" -gt 0 ]; then
 fi
 
 # Non-critical findings — warn but allow
-echo "[sql-valid8] WARNING — $TOTAL_V finding(s): $HIGHS HIGH, $MEDIUMS MEDIUM, $LOWS LOW"
+echo "[nitsql] WARNING — $TOTAL_V finding(s): $HIGHS HIGH, $MEDIUMS MEDIUM, $LOWS LOW"
 echo "  Commit allowed. Consider fixing before pushing."
 exit 0

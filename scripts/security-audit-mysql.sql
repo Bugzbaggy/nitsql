@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - MySQL Security Audit
+-- nitsql (example) - MySQL Security Audit
 -- Dialect: MySQL
 -- Minimum version: MySQL 8.0+
 -- ==========================================================================

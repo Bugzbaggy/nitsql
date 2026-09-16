@@ -1,6 +1,6 @@
 {
-  "name": "sql-valid8",
-  "description": "Multi-dialect SQL best practices analyzer for MSSQL (SQL Server 2019+), PostgreSQL (13+), Oracle (19c+), MySQL (8.0+), and SQLite. Reviews stored procedures, queries, and application code (Python, Node.js, C#) for performance issues, SQL injection, missing indexes, connection pooling, error handling, and 52 static analysis rules. Auto-detects dialect from code context. Includes CLI analyzer with --fix suggestions for CI/CD pipelines, inline suppression pragmas (-- sql-valid8:ignore), a GitHub Actions CI gate template, pre-commit git hook for local SQL validation before commit (auto-detects dialect, blocks CRITICAL findings), database audit scripts, slow query diagnostics, and index recommendation queries for each platform.",
+  "name": "nitsql",
+  "description": "Multi-dialect SQL best practices analyzer for MSSQL (SQL Server 2019+), PostgreSQL (13+), Oracle (19c+), MySQL (8.0+), and SQLite. Reviews stored procedures, queries, and application code (Python, Node.js, C#) for performance issues, SQL injection, missing indexes, connection pooling, error handling, and 52 static analysis rules. Auto-detects dialect from code context. Includes CLI analyzer with --fix suggestions for CI/CD pipelines, inline suppression pragmas (-- nitsql:ignore), a GitHub Actions CI gate template, pre-commit git hook for local SQL validation before commit (auto-detects dialect, blocks CRITICAL findings), database audit scripts, slow query diagnostics, and index recommendation queries for each platform.",
   "version": "7.0.0",
   "author": {
     "name": "Renz Bagasbas",
@@ -8,8 +8,8 @@
     "url": "https://github.com/Bugzbaggy"
   },
   "skills": [
-    "./skills/sql-valid8"
+    "./skills/nitsql"
   ],
-  "homepage": "https://github.com/Bugzbaggy/sql-valid8",
+  "homepage": "https://github.com/Bugzbaggy/nitsql",
   "license": "MIT"
 }

@@ -1,8 +1,8 @@
 #!/usr/bin/env bats
 #
-# Tests for plugins/sql-valid8/hooks/install.sh
+# Tests for plugins/nitsql/hooks/install.sh
 #
-# Run with:  bats plugins/sql-valid8/hooks/tests/test_install.bats
+# Run with:  bats plugins/nitsql/hooks/tests/test_install.bats
 #
 # Covers:
 #   - --help output
@@ -35,7 +35,7 @@ teardown() {
 @test "install.sh --help prints usage with all flags" {
 	run "$INSTALL" --help
 	[ "$status" -eq 0 ]
-	[[ "$output" == *"Install the sql-valid8 pre-commit hook."* ]]
+	[[ "$output" == *"Install the nitsql pre-commit hook."* ]]
 	[[ "$output" == *"--global"* ]]
 	[[ "$output" == *"--force"* ]]
 	[[ "$output" == *"--remove"* ]]

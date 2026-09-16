@@ -1,4 +1,4 @@
-# sql-valid8
+# nitsql
 
 A multi-dialect SQL static analyzer: **52 rules** across SQL Server,
 PostgreSQL, Oracle, MySQL, and SQLite, with a CLI for CI, a pre-commit hook,
@@ -17,8 +17,8 @@ Python, Node.js, and C#.
 ## Quick start
 
 ```bash
-git clone https://github.com/Bugzbaggy/sql-valid8.git
-cd sql-valid8
+git clone https://github.com/Bugzbaggy/nitsql.git
+cd nitsql
 python scripts/analyze_sql.py path/to/your/sql/
 ```
 
@@ -61,10 +61,10 @@ CRITICAL:
 
 ## Use it in CI
 
-A GitHub Actions template ships in [`ci/sql-valid8.yml`](ci/sql-valid8.yml):
+A GitHub Actions template ships in [`ci/nitsql.yml`](ci/nitsql.yml):
 
 ```yaml
-- name: SQL Valid8
+- name: nitsql
   run: python scripts/analyze_sql.py --severity critical --json sql/
 ```
 
@@ -89,19 +89,19 @@ When a finding is knowingly accepted — legacy passthrough code, a reviewed
 exception — suppress it inline rather than lowering the rule globally:
 
 ```sql
--- sql-valid8:ignore SA0002 -- reviewed 2026-03: parameterised upstream
+-- nitsql:ignore SA0002 -- reviewed 2026-03: parameterised upstream
 SET @SQL = @SQL + @Filter;
 ```
 
-See [`skills/sql-valid8/references/suppression-pragmas.md`](skills/sql-valid8/references/suppression-pragmas.md).
+See [`skills/nitsql/references/suppression-pragmas.md`](skills/nitsql/references/suppression-pragmas.md).
 
 ## Use it as a Claude Code skill
 
 ```bash
-/plugin install sql-valid8@Bugzbaggy
+/plugin install nitsql@Bugzbaggy
 ```
 
-The skill in [`skills/sql-valid8/`](skills/sql-valid8/) carries the rule
+The skill in [`skills/nitsql/`](skills/nitsql/) carries the rule
 reference, dialect-specific optimization notes, connection patterns, and
 least-privilege security guidance.
 

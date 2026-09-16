@@ -1,4 +1,4 @@
-# Contributing to sql-valid8
+# Contributing to nitsql
 
 A multi-dialect SQL static analyzer with 52 rules, a CI gate, a pre-commit hook, and a Claude Code skill.
 
@@ -18,8 +18,8 @@ open an issue before starting anything large.
 ## Getting started
 
 ```bash
-git clone https://github.com/Bugzbaggy/sql-valid8.git
-cd sql-valid8
+git clone https://github.com/Bugzbaggy/nitsql.git
+cd nitsql
 ```
 
 Per-project setup lives in the [README](README.md).

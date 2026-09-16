@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the sql-valid8 pre-commit hook.
+# Install the nitsql pre-commit hook.
 #
 # Usage:
 #   install.sh                     # install locally (current repo only)
@@ -56,7 +56,7 @@ fi
 # Uninstall path
 if [ $REMOVE -eq 1 ]; then
 	git config $GIT_CFG_SCOPE --unset core.hooksPath 2>/dev/null || true
-	echo "sql-valid8 hook removed from $SCOPE_LABEL."
+	echo "nitsql hook removed from $SCOPE_LABEL."
 	exit 0
 fi
 
@@ -80,7 +80,7 @@ for cmd in python python3 py; do
 	fi
 done
 if [ -z "$PYTHON" ]; then
-	echo "Error: python not found. The sql-valid8 analyzer requires Python 3.8+."
+	echo "Error: python not found. The nitsql analyzer requires Python 3.8+."
 	echo "Ensure python, python3, or py is in your PATH."
 	exit 1
 fi
@@ -125,7 +125,7 @@ fi
 
 git config $GIT_CFG_SCOPE core.hooksPath "$HOOKS_PATH"
 
-echo "sql-valid8 pre-commit hook installed ($SCOPE_LABEL)."
+echo "nitsql pre-commit hook installed ($SCOPE_LABEL)."
 echo ""
 echo "  Hook path:  $HOOKS_PATH/pre-commit"
 echo "  Python:     $PYTHON"

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test_analyzer.py - pytest unit tests for SQL Valid8 static analyzer
+test_analyzer.py - pytest unit tests for nitsql static analyzer
 
 Covers:
   - Dialect detection (all 5 dialects + edge cases)
@@ -661,27 +661,27 @@ def _rules(violations, rule_id):
 
 
 class TestIgnorePragmas:
-    """Line- and file-level `-- sql-valid8:ignore` escape hatches (all dialects)."""
+    """Line- and file-level `-- nitsql:ignore` escape hatches (all dialects)."""
 
     def test_baseline_select_star_fires(self):
         v = _analyze("SELECT * FROM dbo.Orders;")
         assert _has_rule(v, "SA0001")
 
     def test_line_ignore_all_suppresses(self):
-        v = _analyze("SELECT * FROM dbo.Orders;  -- sql-valid8:ignore")
+        v = _analyze("SELECT * FROM dbo.Orders;  -- nitsql:ignore")
         assert not _has_rule(v, "SA0001")
 
     def test_line_ignore_specific_rule_suppresses(self):
-        v = _analyze("SELECT * FROM dbo.Orders;  -- sql-valid8:ignore=SA0001")
+        v = _analyze("SELECT * FROM dbo.Orders;  -- nitsql:ignore=SA0001")
         assert not _has_rule(v, "SA0001")
 
     def test_line_ignore_other_rule_still_fires(self):
-        v = _analyze("SELECT * FROM dbo.Orders;  -- sql-valid8:ignore=SA9999")
+        v = _analyze("SELECT * FROM dbo.Orders;  -- nitsql:ignore=SA9999")
         assert _has_rule(v, "SA0001")
 
     def test_file_ignore_suppresses_everywhere(self):
         sql = """
-        -- sql-valid8:ignore-file
+        -- nitsql:ignore-file
         SELECT * FROM dbo.Orders;
         SELECT * FROM dbo.Customers;
         """
@@ -690,7 +690,7 @@ class TestIgnorePragmas:
 
     def test_file_ignore_specific_rule(self):
         sql = """
-        -- sql-valid8:ignore-file=SA0001
+        -- nitsql:ignore-file=SA0001
         SELECT * FROM dbo.Orders;
         """
         v = _analyze(sql)

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-test_runner.py - Multi-Dialect Automated Test Runner for SQL Valid8 Skill (example)
+test_runner.py - Multi-Dialect Automated Test Runner for nitsql Skill (example)
 
 This script:
 1. Analyzes test files across all supported SQL dialects (MSSQL, PostgreSQL, Oracle, MySQL)
@@ -26,8 +26,8 @@ from dataclasses import dataclass, asdict
 from typing import List, Dict, Set, Optional
 from enum import Enum
 
-# Add scripts to path (tests/ -> test-app/ -> repo root -> skills/sql-valid8/scripts)
-SCRIPTS_DIR = Path(__file__).parent.parent.parent / "skills" / "sql-valid8" / "scripts"
+# Add scripts to path (tests/ -> test-app/ -> repo root -> skills/nitsql/scripts)
+SCRIPTS_DIR = Path(__file__).parent.parent.parent / "skills" / "nitsql" / "scripts"
 sys.path.insert(0, str(SCRIPTS_DIR))
 
 
@@ -817,7 +817,7 @@ def run_tests(file_filter: str = None, dialect_filter: str = None) -> Dict:
 def print_report(results: Dict):
     """Print formatted test results."""
     print("\n" + "=" * 80)
-    print("SQL VALID8 SKILL - MULTI-DIALECT TEST REPORT")
+    print("NITSQL SKILL - MULTI-DIALECT TEST REPORT")
     print("=" * 80)
 
     print(f"\nSummary:")
@@ -872,7 +872,7 @@ def print_report(results: Dict):
 def main():
     import argparse
 
-    parser = argparse.ArgumentParser(description="Multi-Dialect Test Runner for SQL Valid8 Skill")
+    parser = argparse.ArgumentParser(description="Multi-Dialect Test Runner for nitsql Skill")
     parser.add_argument("--file", type=str, help="Test specific file")
     parser.add_argument("--dialect", type=str, choices=["mssql", "postgresql", "oracle", "mysql"],
                         help="Run tests for one dialect only")

@@ -1,6 +1,6 @@
 # Suppression Pragmas (v7.0.0+)
 
-Inline escape hatches for the sql-valid8 analyzer. They let you silence a
+Inline escape hatches for the nitsql analyzer. They let you silence a
 finding that is a false positive or an accepted risk **at the exact line**,
 so the rest of the file stays gated. No config file, no CLI flags — the
 pragma lives in a SQL line comment and travels with the code in review.
@@ -13,11 +13,11 @@ PostgreSQL, Oracle, MySQL, SQLite.
 
 | Pragma | Scope | Effect |
 | ------ | ----- | ------ |
-| `-- sql-valid8:ignore` | the line it is on | suppress **all** rules on that line |
-| `-- sql-valid8:ignore=SA0002` | the line it is on | suppress rule `SA0002` on that line |
-| `-- sql-valid8:ignore=SA0002,SA0008` | the line it is on | suppress several rules (comma-separated) |
-| `-- sql-valid8:ignore-file` | whole file | suppress **all** rules in the file |
-| `-- sql-valid8:ignore-file=SA0008` | whole file | suppress rule `SA0008` everywhere in the file |
+| `-- nitsql:ignore` | the line it is on | suppress **all** rules on that line |
+| `-- nitsql:ignore=SA0002` | the line it is on | suppress rule `SA0002` on that line |
+| `-- nitsql:ignore=SA0002,SA0008` | the line it is on | suppress several rules (comma-separated) |
+| `-- nitsql:ignore-file` | whole file | suppress **all** rules in the file |
+| `-- nitsql:ignore-file=SA0008` | whole file | suppress rule `SA0008` everywhere in the file |
 
 - Rule IDs are the ones shown in analyzer output (`SA0001`…`SA0019`, plus
   dialect rules like `SA-MS007`, `SA-LITE003`). Unknown IDs are simply never
@@ -32,24 +32,24 @@ PostgreSQL, Oracle, MySQL, SQLite.
 
 ```sql
 -- Accepted: reporting view genuinely needs every column.
-SELECT * FROM dbo.DailyMetrics;            -- sql-valid8:ignore=SA0001
+SELECT * FROM dbo.DailyMetrics;            -- nitsql:ignore=SA0001
 
 -- Legacy passthrough we cannot parameterise; reviewed and allow-listed.
-EXEC (@sql) AT [LEGACY_LINK];              -- sql-valid8:ignore=SA-MS007
+EXEC (@sql) AT [LEGACY_LINK];              -- nitsql:ignore=SA-MS007
 
 -- Generated migration file — exempt the whole file from one noisy rule.
--- sql-valid8:ignore-file=SA0008
+-- nitsql:ignore-file=SA0008
 SELECT col FROM staging_table;
 ```
 
 MySQL note: MySQL only treats `--` as a comment when followed by whitespace.
-Always write `-- sql-valid8:ignore` (with the space), never `--sql-valid8:...`.
+Always write `-- nitsql:ignore` (with the space), never `--nitsql:...`.
 
 ## When NOT to suppress
 
 Suppression is for false positives and consciously accepted risk — not for
 silencing CRITICAL security findings to get a commit through. The CI gate
-(`ci/sql-valid8.yml`) honours the same pragmas, so a suppressed CRITICAL
+(`ci/nitsql.yml`) honours the same pragmas, so a suppressed CRITICAL
 will pass CI too. Prefer fixing; if you suppress a CRITICAL, leave a reason
 in the same comment and get it reviewed.
 
@@ -73,4 +73,17 @@ available — you do **not** need a pragma for these:
 
 These keep legacy passthrough code (e.g. the cloud data warehouse via the third-party linked
 server) from hard-blocking CI while still surfacing the risk. Use
-`-- sql-valid8:ignore=SA-MS007` to silence entirely once reviewed.
+`-- nitsql:ignore=SA-MS007` to silence entirely once reviewed.
+
+## A note on the former name
+
+This tool was previously called `sql-valid8`. The analyzer still accepts the
+old pragma form, so suppressions written before the rename keep working:
+
+```sql
+-- sql-valid8:ignore=SA0002   -- still honoured (deprecated)
+-- nitsql:ignore=SA0002       -- preferred
+```
+
+Prefer the new form in new code. The alias exists so a rename never silently
+re-enables a rule someone deliberately suppressed.

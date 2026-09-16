@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - Oracle Security Audit
+-- nitsql (example) - Oracle Security Audit
 -- Dialect: Oracle Database
 -- Minimum version: Oracle 19c+ (some queries compatible with 12c+)
 -- ==========================================================================

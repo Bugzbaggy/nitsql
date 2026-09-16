@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - PostgreSQL Security Audit
+-- nitsql (example) - PostgreSQL Security Audit
 -- Dialect: PostgreSQL
 -- Minimum version: PostgreSQL 13+
 -- ==========================================================================

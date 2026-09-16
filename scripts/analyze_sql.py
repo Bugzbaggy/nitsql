@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-SQL Valid8 - Multi-Dialect SQL Analyzer
+nitsql - Multi-Dialect SQL Analyzer
 
 Production-ready static analysis for SQL files across MSSQL, PostgreSQL,
 Oracle, MySQL, and SQLite dialects.  Auto-detects the dialect from file
@@ -151,21 +151,21 @@ def _prepare_content(raw: str) -> Tuple[str, List[str], str, List[str]]:
 # Pragma escape hatches and contextual demotion
 # ---------------------------------------------------------------------------
 #
-# Line pragma:   -- sql-valid8:ignore             (suppress all rules on this line)
-#                -- sql-valid8:ignore=SA0002      (suppress one rule)
-#                -- sql-valid8:ignore=SA0002,SA-MS007  (suppress multiple)
-# File pragma:   -- sql-valid8:ignore-file        (suppress all rules in file)
-#                -- sql-valid8:ignore-file=SA0002 (suppress one rule in file)
+# Line pragma:   -- nitsql:ignore             (suppress all rules on this line)
+#                -- nitsql:ignore=SA0002      (suppress one rule)
+#                -- nitsql:ignore=SA0002,SA-MS007  (suppress multiple)
+# File pragma:   -- nitsql:ignore-file        (suppress all rules in file)
+#                -- nitsql:ignore-file=SA0002 (suppress one rule in file)
 #
 # The pragma is matched against the RAW (un-stripped) line so it survives
 # _strip_line_comments removing the comment text from the clean variant.
 
 _IGNORE_FILE_PRAGMA_RE = re.compile(
-    r"--\s*sql-valid8\s*:\s*ignore-file(?:\s*=\s*([A-Za-z0-9_\-,\s]+))?",
+    r"--\s*(?:nitsql|sql-valid8)\s*:\s*ignore-file(?:\s*=\s*([A-Za-z0-9_\-,\s]+))?",
     re.IGNORECASE,
 )
 _IGNORE_LINE_PRAGMA_RE = re.compile(
-    r"--\s*sql-valid8\s*:\s*ignore(?!\s*-file)(?:\s*=\s*([A-Za-z0-9_\-,\s]+))?",
+    r"--\s*(?:nitsql|sql-valid8)\s*:\s*ignore(?!\s*-file)(?:\s*=\s*([A-Za-z0-9_\-,\s]+))?",
     re.IGNORECASE,
 )
 
@@ -727,7 +727,7 @@ class SQLAnalyzer:
                         message_desc += (
                             " (linked-server passthrough: sp_executesql does "
                             "not support AT linked_server; validate/allow-list "
-                            "inputs at the boundary or use a sql-valid8:ignore "
+                            "inputs at the boundary or use a nitsql:ignore "
                             "pragma)"
                         )
                     self.violations.append(Violation(
@@ -1725,7 +1725,7 @@ class SQLAnalyzer:
 
         For `EXEC (@sql) AT linked_server`, sp_executesql has no AT-variant,
         so the line is demoted to MEDIUM with an explanatory note.  Devs
-        can still use `-- sql-valid8:ignore=SA-MS007` to suppress entirely.
+        can still use `-- nitsql:ignore=SA-MS007` to suppress entirely.
         """
         pat = re.compile(r"\bEXEC\s*\(\s*@\w+\s*\)", re.IGNORECASE)
         at_pat = re.compile(
@@ -1744,7 +1744,7 @@ class SQLAnalyzer:
                         "EXEC(@sql) AT linked_server -- sp_executesql does not "
                         "support AT linked_server; validate inputs at boundaries"
                     ),
-                    suggestion="Validate / allow-list @sql contents at source, or use -- sql-valid8:ignore=SA-MS007",
+                    suggestion="Validate / allow-list @sql contents at source, or use -- nitsql:ignore=SA-MS007",
                     dialect_specific=True,
                     fix_text="Document inputs and review for injection; sp_executesql is not an option here",
                 ))
@@ -2698,7 +2698,7 @@ def _format_report(
     sep = "=" * 70
 
     parts.append(sep)
-    parts.append("SQL Valid8 Analyzer - Multi-Dialect SQL Analysis")
+    parts.append("nitsql Analyzer - Multi-Dialect SQL Analysis")
     parts.append(sep)
     parts.append("")
     parts.append("File: {}".format(filepath))
@@ -2777,7 +2777,7 @@ def _format_json(
 def _build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="analyze_sql",
-        description="SQL Valid8 - Multi-Dialect SQL Analyzer",
+        description="nitsql - Multi-Dialect SQL Analyzer",
     )
     p.add_argument(
         "paths",

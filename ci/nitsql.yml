@@ -1,11 +1,11 @@
-name: sql-valid8
+name: nitsql
 
 # ---------------------------------------------------------------------------
-# sql-valid8 — authoritative SQL gate (TEMPLATE)
+# nitsql — authoritative SQL gate (TEMPLATE)
 # ---------------------------------------------------------------------------
-# Copy this file to `.github/workflows/sql-valid8.yml` in a database repo.
+# Copy this file to `.github/workflows/nitsql.yml` in a database repo.
 #
-# It runs the sql-valid8 multi-dialect analyzer against the *.sql files
+# It runs the nitsql multi-dialect analyzer against the *.sql files
 # changed in a PR (or pushed to master) and fails the job on any CRITICAL
 # finding. Unlike the local pre-commit hook — which a developer can skip
 # (`--no-verify`) or simply never install — this gate runs server-side and
@@ -17,19 +17,19 @@ name: sql-valid8
 # DEPLOYMENT — the workflow needs analyze_sql.py present in the repo. Pick one:
 #
 #   A. Vendored (recommended, self-contained):
-#      Copy plugins/sql-valid8/scripts/analyze_sql.py into the repo at
+#      Copy plugins/nitsql/scripts/analyze_sql.py into the repo at
 #      `.githooks/analyze_sql.py` and keep ANALYZER below as-is. Re-copy on
-#      each sql-valid8 release so CI and the local hook stay in lockstep.
+#      each nitsql release so CI and the local hook stay in lockstep.
 #
 #   B. Marketplace checkout:
 #      Add a second `actions/checkout` step for example/claude-marketplace and
 #      set ANALYZER to that path, e.g.
-#        plugins/sql-valid8/scripts/analyze_sql.py
+#        plugins/nitsql/scripts/analyze_sql.py
 #
 # Suppress individual findings inline with pragmas (no config file needed):
-#   -- sql-valid8:ignore                 (whole line)
-#   -- sql-valid8:ignore=SA0002          (one rule on the line)
-#   -- sql-valid8:ignore-file=SA0008     (one rule for the whole file)
+#   -- nitsql:ignore                 (whole line)
+#   -- nitsql:ignore=SA0002          (one rule on the line)
+#   -- nitsql:ignore-file=SA0008     (one rule for the whole file)
 # ---------------------------------------------------------------------------
 
 on:
@@ -37,14 +37,14 @@ on:
     paths:
       - '**/*.sql'
       - '.githooks/analyze_sql.py'
-      - '.github/workflows/sql-valid8.yml'
+      - '.github/workflows/nitsql.yml'
   push:
     branches:
       - master
     paths:
       - '**/*.sql'
       - '.githooks/analyze_sql.py'
-      - '.github/workflows/sql-valid8.yml'
+      - '.github/workflows/nitsql.yml'
   workflow_dispatch:
 
 permissions:
@@ -107,11 +107,11 @@ jobs:
         shell: bash
         run: |
           if [ ! -f "$ANALYZER" ]; then
-            echo "::error::$ANALYZER missing — vendor analyze_sql.py from sql-valid8 (v7.0.0+) or switch to the marketplace-checkout deployment."
+            echo "::error::$ANALYZER missing — vendor analyze_sql.py from nitsql (v7.0.0+) or switch to the marketplace-checkout deployment."
             exit 1
           fi
 
-      - name: Run sql-valid8 analyzer
+      - name: Run nitsql analyzer
         if: steps.changed.outputs.no_files == 'false'
         id: analyze
         shell: bash
@@ -127,12 +127,12 @@ jobs:
           # a crash leaves the file empty/unparseable, so fail with a clear
           # message instead of a confusing "integer expression expected" later.
           set +e
-          python "$ANALYZER" --json "${FILES[@]}" > "$RUNNER_TEMP/sql_valid8.json"
+          python "$ANALYZER" --json "${FILES[@]}" > "$RUNNER_TEMP/nitsql.json"
           ANALYZER_EXIT=$?
           set -e
 
-          if ! python -c 'import json,sys; json.load(open(sys.argv[1]))' "$RUNNER_TEMP/sql_valid8.json" 2>/dev/null; then
-            echo "::error::sql-valid8 analyzer failed (exit $ANALYZER_EXIT) — no valid JSON produced. See the analyzer output above."
+          if ! python -c 'import json,sys; json.load(open(sys.argv[1]))' "$RUNNER_TEMP/nitsql.json" 2>/dev/null; then
+            echo "::error::nitsql analyzer failed (exit $ANALYZER_EXIT) — no valid JSON produced. See the analyzer output above."
             exit 1
           fi
 
@@ -145,7 +145,7 @@ jobs:
           d = json.load(open(sys.argv[1]))
           c = d.get("severity_counts", {})
           print(d.get("total_violations", 0), c.get("CRITICAL", 0), c.get("HIGH", 0), c.get("MEDIUM", 0), c.get("LOW", 0))
-          ' "$RUNNER_TEMP/sql_valid8.json")"
+          ' "$RUNNER_TEMP/nitsql.json")"
 
           {
             echo "total=$TOTAL"
@@ -156,7 +156,7 @@ jobs:
           } >> "$GITHUB_OUTPUT"
 
           {
-            echo "## sql-valid8 results"
+            echo "## nitsql results"
             echo ""
             echo "| Severity | Count |"
             echo "| -------- | ----- |"
@@ -176,11 +176,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           if [ "$CRIT" -gt 0 ]; then
-            echo "::error::sql-valid8 BLOCKED — $CRIT CRITICAL finding(s) in changed SQL."
+            echo "::error::nitsql BLOCKED — $CRIT CRITICAL finding(s) in changed SQL."
             exit 1
           fi
 
       - name: All clean
         if: steps.changed.outputs.no_files == 'true'
         shell: bash
-        run: echo "No SQL files in this change — sql-valid8 skipped."
+        run: echo "No SQL files in this change — nitsql skipped."

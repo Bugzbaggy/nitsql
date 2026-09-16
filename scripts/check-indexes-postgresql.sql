@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - PostgreSQL Index Health Check
+-- nitsql (example) - PostgreSQL Index Health Check
 -- Dialect: PostgreSQL
 -- Minimum version: PostgreSQL 13+
 -- ==========================================================================

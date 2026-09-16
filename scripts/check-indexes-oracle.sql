@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - Oracle Index Health Check
+-- nitsql (example) - Oracle Index Health Check
 -- Dialect: Oracle Database
 -- Minimum version: Oracle 19c+ (some queries require 12c+ features)
 -- ==========================================================================

@@ -1,5 +1,5 @@
 ---
-name: sql-valid8
+name: nitsql
 description: Multi-dialect SQL best practices skill for MSSQL, PostgreSQL, Oracle, MySQL, and SQLite. Analyzes queries, stored procedures, indexing, security, and application database code with 52-rule static analyzer. Use when writing, reviewing, optimizing, or migrating SQL across any supported RDBMS.
 metadata:
   author: example
@@ -13,7 +13,7 @@ metadata:
   allowed-tools: Read, Grep, Glob, Bash
 ---
 
-# SQL Valid8 - Multi-Dialect SQL Best Practices
+# nitsql - Multi-Dialect SQL Best Practices
 
 **Role:** Specialist with deep expertise across MSSQL (SQL Server 2019+), PostgreSQL 13+, Oracle 19c+, MySQL 8.0+, and SQLite. Analyzes queries, stored procedures, indexing strategies, security configurations, connection patterns, and application database code across all five major RDBMS platforms using a 52-rule static analyzer.
 
@@ -274,10 +274,10 @@ Local SQL validation before each `git commit`. Auto-detects dialect per file (MS
 
 ```bash
 git clone https://github.com/example/claude-marketplace ~/claude-marketplace
-~/claude-marketplace/plugins/sql-valid8/hooks/install.sh --global
+~/claude-marketplace/plugins/nitsql/hooks/install.sh --global
 ```
 
-**Local install** (current repo only): `plugins/sql-valid8/hooks/install.sh`
+**Local install** (current repo only): `plugins/nitsql/hooks/install.sh`
 
 **Bypass a commit:** `git commit --no-verify`
 
@@ -285,18 +285,18 @@ Full install/uninstall options, coexistence notes for husky/pre-commit/lefthook/
 
 ## CI Gate (v7.0.0+)
 
-The local hook can be skipped (`--no-verify`) or never installed. For an enforcement that runs server-side on every PR, copy `ci/sql-valid8.yml` to a database repo's `.github/workflows/`. It analyzes the `*.sql` files changed in the PR, posts a severity summary, and fails the job on any CRITICAL finding. Auto-detects dialect, so one workflow covers all five platforms. See `references/pre-commit-hook.md` → *CI gate*.
+The local hook can be skipped (`--no-verify`) or never installed. For an enforcement that runs server-side on every PR, copy `ci/nitsql.yml` to a database repo's `.github/workflows/`. It analyzes the `*.sql` files changed in the PR, posts a severity summary, and fails the job on any CRITICAL finding. Auto-detects dialect, so one workflow covers all five platforms. See `references/pre-commit-hook.md` → *CI gate*.
 
 ## Suppressing False Positives (v7.0.0+)
 
 Silence an accepted finding inline — works in all dialects, no config file:
 
 ```sql
-SELECT * FROM dbo.ReportView;     -- sql-valid8:ignore=SA0001
--- sql-valid8:ignore-file=SA0008  (whole-file, put near the top)
+SELECT * FROM dbo.ReportView;     -- nitsql:ignore=SA0001
+-- nitsql:ignore-file=SA0008  (whole-file, put near the top)
 ```
 
-`-- sql-valid8:ignore` (all rules on the line), `-- sql-valid8:ignore=SA0002,SA0008` (specific rules), and `-- sql-valid8:ignore-file[=IDs]` (whole file) are honoured by both the local hook and the CI gate. Some findings auto-demote when the canonical fix is unavailable (e.g. `SA0002` → HIGH and `SA-MS007` → MEDIUM for `EXEC(@sql) AT linked_server`, `OPENQUERY`, `OPENROWSET`). Full reference: `references/suppression-pragmas.md`.
+`-- nitsql:ignore` (all rules on the line), `-- nitsql:ignore=SA0002,SA0008` (specific rules), and `-- nitsql:ignore-file[=IDs]` (whole file) are honoured by both the local hook and the CI gate. Some findings auto-demote when the canonical fix is unavailable (e.g. `SA0002` → HIGH and `SA-MS007` → MEDIUM for `EXEC(@sql) AT linked_server`, `OPENQUERY`, `OPENROWSET`). Full reference: `references/suppression-pragmas.md`.
 
 ## Full Compiled Document
 

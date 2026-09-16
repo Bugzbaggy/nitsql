@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - MySQL Index Health Check
+-- nitsql (example) - MySQL Index Health Check
 -- Dialect: MySQL
 -- Minimum version: MySQL 8.0+ (performance_schema required)
 -- ==========================================================================

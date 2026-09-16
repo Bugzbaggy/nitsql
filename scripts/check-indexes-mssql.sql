@@ -1,5 +1,5 @@
 -- ==========================================================================
--- SQL Valid8 (example) - MSSQL Index Health Check
+-- nitsql (example) - MSSQL Index Health Check
 -- Dialect: Microsoft SQL Server / Azure SQL Database
 -- Compatible with SQL Server 2019+, Azure SQL Database, Azure SQL Managed Instance
 -- ==========================================================================
@@ -12,7 +12,7 @@
 
 SET NOCOUNT ON;
 
-PRINT '=== SQL Valid8 - MSSQL Index Health Check ===';
+PRINT '=== nitsql - MSSQL Index Health Check ===';
 PRINT '';
 
 -- ============================================================================

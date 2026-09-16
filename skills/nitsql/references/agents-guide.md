@@ -1,4 +1,4 @@
-# SQL Valid8 - Complete Multi-Dialect Agent Guide
+# nitsql - Complete Multi-Dialect Agent Guide
 
 This is the compiled reference document for AI agents. Use this guide when analyzing, writing, or refactoring code that interacts with **MSSQL** (SQL Server 2019+, Azure SQL), **PostgreSQL** (13+), **Oracle** (19c+), or **MySQL** (8.0+).
 

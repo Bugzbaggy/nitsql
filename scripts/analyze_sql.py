@@ -953,7 +953,7 @@ class SQLAnalyzer:
             "JOIN", "APPLY", "LATERAL", "USING", "WITH", "ORDER", "GROUP",
         }
         # Capture a possibly-qualified identifier after FROM / JOIN, e.g.
-        #   FROM ms.SubAccount          -> captures `ms.SubAccount`
+        #   FROM app.Customer          -> captures `app.Customer`
         #   FROM Foo                    -> captures `Foo`
         #   FROM #stat                  -> captures `#stat`
         #   FROM [dbo].[Table] alias    -> captures `[dbo].[Table]`
@@ -961,7 +961,7 @@ class SQLAnalyzer:
         # anchors the end of the identifier so the engine can't backtrack
         # `\w*` to match only a prefix and then claim the rest is "after"
         # the identifier (which produced false positives like
-        # `FROM ms.SubAccount` matching `m`).
+        # `FROM app.Customer` matching `m`).
         join_re = re.compile(
             r"\b(?:FROM|JOIN)\s+"
             r"(\[?[#@]{0,2}[A-Za-z_]\w*\]?(?:\.\[?\w+\]?)*)"

@@ -10,7 +10,7 @@
 - **Active Data Guard DML redirection**: Write to standby, redirected to primary
 
 ### Oracle 21c
-- **JSON data type**: Native `JSON` column type (not CLOB-based)
+- **JSON data type**: Native `JSON` column type (not CLOB-based). `JSON_VALUE()`/`JSON_QUERY()`/`JSON_TABLE()` themselves are older (12.1.0.2+) and work fine against `CLOB`/`VARCHAR2` columns holding JSON text -- the native `JSON` type in 21c is a storage/validation improvement, not a prerequisite for querying JSON
 - **Blockchain tables**: Tamper-evident, insert-only tables with cryptographic chaining
 - **SQL macros**: Reusable SQL expressions inlined at parse time (table and scalar macros)
 - **In-memory hybrid columnar scan**: Automatic in-memory columnar processing

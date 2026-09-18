@@ -100,7 +100,7 @@ SELECT LAST_INSERT_ID();
 | NULLIF | `NULLIF(a,b)` | `NULLIF(a,b)` | `NULLIF(a,b)` | `NULLIF(a,b)` |
 
 ### Cross-Dialect Recommendation
-Always use `COALESCE()` — it is SQL standard and works on all four dialects.
+Always use `COALESCE()` — it is SQL standard and works across every dialect this reference covers (MSSQL, PostgreSQL, Oracle, MySQL) as well as SQLite.
 
 ## Date and Time Functions
 

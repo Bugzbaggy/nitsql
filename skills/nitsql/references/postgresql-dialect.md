@@ -2,6 +2,25 @@
 
 ## Version Features
 
+Feature availability below is a floor: assume unstated behavior needs verifying against your actual server version (`SELECT version();`), especially for anything not listed here.
+
+### PostgreSQL 10
+- **Declarative partitioning**: `PARTITION BY RANGE (...)` / `PARTITION BY LIST (...)` — native partitioning without the old trigger-and-inheritance workaround. HASH partitioning was not yet available (11+).
+- **Identity columns**: `GENERATED ALWAYS/BY DEFAULT AS IDENTITY` — the SQL-standard alternative to `SERIAL` (see Identity and Sequences below)
+- **Logical replication**: built-in `PUBLICATION`/`SUBSCRIPTION`
+
+### PostgreSQL 11
+- **Hash partitioning**: `PARTITION BY HASH (...)` added alongside RANGE/LIST
+- **Partitioned tables gain**: `PRIMARY KEY`/`FOREIGN KEY` constraints, default partitions (`PARTITION ... DEFAULT`), `UPDATE` that moves a row between partitions
+- **Covering indexes**: `CREATE INDEX ... INCLUDE (col1, col2)` (see Indexing below)
+- **Stored procedures**: `CREATE PROCEDURE` / `CALL`, which can manage their own transactions (`COMMIT`/`ROLLBACK`) — functions still cannot
+- **Parallel hash join** and parallel `CREATE INDEX` for B-tree indexes
+
+### PostgreSQL 12
+- **Generated columns**: `GENERATED ALWAYS AS (expression) STORED` (see Generated Columns below). PostgreSQL only supports `STORED`, not `VIRTUAL`, generated columns.
+- **`REINDEX CONCURRENTLY`**: rebuild an index without holding an exclusive lock for the whole duration (see Indexing below)
+- **Partition pruning at execution time**: prepared statements and partitioned tables referenced via parameters now prune correctly at runtime, not just at plan time
+
 ### PostgreSQL 13
 - **Incremental sorting**: Leverages existing sort order for multi-column sorts
 - **Parallel vacuum**: VACUUM can use multiple workers for index cleanup
@@ -233,6 +252,45 @@ VALUES (nextval('app.invoice_number_seq'), 42);
 SELECT currval('app.invoice_number_seq');
 ```
 
+### Generated Columns (12+)
+```sql
+-- STORED generated columns require PostgreSQL 12+. PostgreSQL has no VIRTUAL
+-- generated column option (unlike MySQL/Oracle/SQLite) -- STORED is the only kind.
+CREATE TABLE app.order_items (
+    order_item_id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    quantity INTEGER NOT NULL,
+    unit_price NUMERIC(12,2) NOT NULL,
+    line_total NUMERIC(12,2) GENERATED ALWAYS AS (quantity * unit_price) STORED
+);
+
+-- Generated columns can be indexed like any other stored column
+CREATE INDEX idx_order_items_line_total ON app.order_items (line_total);
+
+-- Cannot reference another generated column, a subquery, or a non-immutable function
+-- BAD: NOW() is not immutable
+-- expires_at TIMESTAMPTZ GENERATED ALWAYS AS (created_at + NOW()) STORED
+```
+
+## MERGE (15+)
+```sql
+-- MERGE requires PostgreSQL 15+. On 14 and earlier, use INSERT ... ON CONFLICT
+-- DO UPDATE (single-table upsert) or an explicit PL/pgSQL UPDATE-then-INSERT for
+-- multi-condition merges -- there is no MERGE statement before 15.
+MERGE INTO app.inventory AS tgt
+USING (SELECT 42 AS product_id, 100 AS quantity) AS src
+ON tgt.product_id = src.product_id
+WHEN MATCHED AND src.quantity = 0 THEN
+    DELETE
+WHEN MATCHED THEN
+    UPDATE SET quantity = src.quantity
+WHEN NOT MATCHED THEN
+    INSERT (product_id, quantity) VALUES (src.product_id, src.quantity);
+
+-- Pre-15 equivalent for the common MATCHED/NOT MATCHED case (no conditional DELETE branch):
+INSERT INTO app.inventory (product_id, quantity) VALUES (42, 100)
+ON CONFLICT (product_id) DO UPDATE SET quantity = EXCLUDED.quantity;
+```
+
 ## Error Handling
 
 ### EXCEPTION Block
@@ -379,6 +437,23 @@ CREATE INDEX idx_users_email ON app.users (email)
     WHERE email IS NOT NULL;
 ```
 
+### NULLS NOT DISTINCT (15+)
+```sql
+-- Before PostgreSQL 15: a UNIQUE index/constraint treats NULL as distinct from
+-- every other NULL, so multiple NULL values are always allowed -- there was no
+-- way to say "at most one NULL" through the constraint itself.
+
+-- PostgreSQL 15+: opt in to SQL-standard NULLS NOT DISTINCT behavior
+CREATE UNIQUE INDEX idx_users_backup_email ON app.users (backup_email) NULLS NOT DISTINCT;
+-- Now a second row with backup_email IS NULL violates uniqueness (only one NULL allowed)
+
+-- Also works on UNIQUE table constraints (15+):
+ALTER TABLE app.users ADD CONSTRAINT uq_users_backup_email UNIQUE NULLS NOT DISTINCT (backup_email);
+
+-- Pre-15 workaround: a partial unique index that only indexes the NULL case
+CREATE UNIQUE INDEX idx_users_backup_email_null ON app.users ((backup_email IS NULL)) WHERE backup_email IS NULL;
+```
+
 ### Expression Index
 ```sql
 -- Index on lowercase email for case-insensitive lookups
@@ -426,10 +501,53 @@ CREATE INDEX CONCURRENTLY idx_orders_status ON app.orders (status);
 -- CONCURRENTLY cannot run inside a transaction block
 -- If it fails, it leaves an INVALID index that must be dropped and recreated
 ```
+Caveats:
+- `CREATE INDEX CONCURRENTLY` has been available since PostgreSQL 8.2 — it is not a recent addition, but its failure mode still catches people: on failure it leaves an `INVALID` index rather than rolling back. Check `pg_index.indisvalid` and `DROP INDEX` + retry rather than assuming the failed run cleaned up after itself.
+- `REINDEX CONCURRENTLY` (rebuild an existing index without the exclusive lock `REINDEX` normally takes) requires **PostgreSQL 12+**. Before 12, the only lock-free rebuild path was `CREATE INDEX CONCURRENTLY` under a new name, swap, then `DROP INDEX CONCURRENTLY` (13+ for the drop variant — see below) or a plain `DROP INDEX` on the old one.
+- `DROP INDEX CONCURRENTLY` requires **PostgreSQL 9.6+**.
+- On a partitioned table (10+), neither `CREATE INDEX CONCURRENTLY` nor `REINDEX CONCURRENTLY` can be run directly on the parent in one step in most versions — build/rebuild the index on each partition individually (or via `CREATE INDEX ... ON ONLY` on the parent followed by per-partition `CREATE INDEX CONCURRENTLY` and `ATTACH PARTITION`). Verify the exact supported syntax for your version before scripting this.
 
-## Query Optimization
+## Declarative Partitioning (10+)
 
-### EXPLAIN ANALYZE
+### Minimum Version by Capability
+| Capability | Minimum Version |
+|------------|-----------------|
+| `PARTITION BY RANGE` / `PARTITION BY LIST` | 10 |
+| `PARTITION BY HASH` | 11 |
+| `PRIMARY KEY` / `FOREIGN KEY` on a partitioned table | 11 |
+| Default partition (`PARTITION ... DEFAULT`) | 11 |
+| `UPDATE` that moves a row across partitions | 11 |
+| Runtime partition pruning for parameterized/prepared queries | 12 |
+| Row-level `BEFORE` triggers on partitioned tables | 13 |
+| Logical replication targeting a partitioned table on the subscriber | 13 |
+
+If you are not sure which version introduced a specific partitioning behavior beyond what's listed here, verify against your target version's release notes rather than assuming — partitioning was one of the most actively developed areas of PostgreSQL across the 10-13 release cycle.
+
+### Basic Range Partitioning
+```sql
+-- PostgreSQL 10+
+CREATE TABLE app.events (
+    event_id BIGINT GENERATED ALWAYS AS IDENTITY,
+    event_time TIMESTAMPTZ NOT NULL,
+    payload JSONB,
+    PRIMARY KEY (event_id, event_time)   -- the partition key column(s) must be included in any PRIMARY KEY/UNIQUE constraint on a partitioned table
+) PARTITION BY RANGE (event_time);
+
+CREATE TABLE app.events_2026_01 PARTITION OF app.events
+    FOR VALUES FROM ('2026-01-01') TO ('2026-02-01');
+
+CREATE TABLE app.events_2026_02 PARTITION OF app.events
+    FOR VALUES FROM ('2026-02-01') TO ('2026-03-01');
+
+-- BAD (pre-11 mental model): assuming a global PRIMARY KEY on just event_id works
+-- GOOD: partition key is part of the key, or use a UNIQUE index per partition instead
+```
+
+### Default Partition (11+)
+```sql
+-- Catches rows that don't match any explicit partition -- prevents silent INSERT failures
+CREATE TABLE app.events_default PARTITION OF app.events DEFAULT;
+```
 ```sql
 -- Full analysis with buffer information
 EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON)
@@ -442,9 +560,10 @@ WHERE o.order_date > NOW() - INTERVAL '30 days';
 ### pg_stat_statements (Top Queries)
 ```sql
 -- Enable in postgresql.conf: shared_preload_libraries = 'pg_stat_statements'
+-- (requires a server restart -- this cannot be set with a simple reload)
 CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
 
--- Top queries by total time
+-- Top queries by total time (PostgreSQL 13+ column names)
 SELECT
     calls,
     round(total_exec_time::numeric, 2) AS total_ms,
@@ -455,6 +574,7 @@ FROM pg_stat_statements
 ORDER BY total_exec_time DESC
 LIMIT 20;
 ```
+Version note: `pg_stat_statements` itself has been bundled as a contrib extension for a very long time and is available on every currently-supported PostgreSQL version. What changed is its column names: **PostgreSQL 13** split `total_time`/`mean_time` into separate planning and execution figures — `total_exec_time`/`mean_exec_time` (execution only) plus new `total_plan_time`/`mean_plan_time`. On PostgreSQL 12 and earlier, use `total_time` and `mean_time` instead — the query above will fail with "column does not exist" on those versions. If you don't know which version you're targeting, check `\d pg_stat_statements` first rather than guessing the column set.
 
 ### auto_explain (Log Slow Query Plans)
 ```sql
@@ -517,6 +637,13 @@ SHOW effective_cache_size;
 -- parallel_tuple_cost / parallel_setup_cost: lower to encourage parallelism
 SHOW max_parallel_workers_per_gather;
 ```
+What a given plan node can actually parallelize is version-dependent -- if `EXPLAIN` isn't showing a `Gather`/`Gather Merge` node where you expect one, confirm the operation is supported as parallel on your version before tuning cost parameters further:
+- Parallel sequential scan and parallel aggregate: PostgreSQL 9.6+ (the baseline for parallel query existing at all)
+- Parallel index scan, parallel index-only scan, parallel bitmap heap scan, parallel merge join: 10+
+- Parallel hash join, parallel `CREATE INDEX` for B-tree: 11+
+- Parallel `VACUUM` (index cleanup phase): 13+
+- Parallel `FULL OUTER JOIN`: 16+
+- Plain `INSERT`/`UPDATE`/`DELETE`: the write itself is never parallelized (only the leader process writes) -- `CREATE TABLE AS`/`SELECT INTO` can still parallelize the underlying `SELECT`'s scan/join/aggregate work, it's the row-writing step that stays single-process
 
 ### Storage / I/O
 ```sql

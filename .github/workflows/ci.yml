@@ -32,6 +32,17 @@ jobs:
           fi
           echo 'Analyzer flagged the fixtures as expected.'
 
+  rule-counts:
+    name: Rule-count claims match source
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify README.md / SKILL.md rule counts against source
+        run: python scripts/check_rule_counts.py
+
   hooks:
     name: Pre-commit hook tests
     runs-on: ubuntu-latest

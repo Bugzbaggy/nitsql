@@ -198,18 +198,18 @@ Load the appropriate reference file for detailed, dialect-specific guidance:
 
 For the full rule reference with dialect-specific code examples and comparison tables, load: `references/universal-rules.md`
 
-**71 rules across 10 categories:**
+**71 advisory guidance rules across 10 categories** (this is the reference below, distinct from — and partially overlapping with — the **52 rules** the static analyzer in `scripts/analyze_sql.py` enforces automatically; see category 6 for where they overlap):
 
 1. **Query Performance** (12 rules, CRITICAL): SELECT *, parameterization, SARGable predicates, EXISTS vs COUNT, cursors, batching, result limits, implicit conversion, leading wildcards, UNION ALL, NOLOCK (MSSQL), OR anti-pattern
 2. **Indexing Strategy** (7 rules, CRITICAL): covering indexes, key order, unused indexes, missing indexes, CONCURRENTLY (PG), partial/filtered indexes, statistics maintenance
 3. **Security & Compliance** (9 rules, HIGH): parameterized dynamic SQL, least privilege, no admin accounts, encrypted connections, RLS, encryption at rest, search_path (PG), bind variables (Oracle), audit logging
 4. **Connection Management** (6 rules, HIGH): pooling, retry logic, close/dispose, async, timeouts, read replicas
-5. **Procedural Code** (4 rules, MEDIUM-HIGH): error handling, transaction handling, schema qualification, avoid dynamic SQL
-6. **Static Analysis** (16 rules, MEDIUM-HIGH / CRITICAL): SA0001-SA0016 cross-dialect checks — see `references/universal-rules.md`. MSSQL-only: `SA-MS011` (RESUMABLE in `ALTER TABLE ADD CONSTRAINT`), `SA-MS012` (WAIT_AT_LOW_PRIORITY in `ALTER TABLE ADD CONSTRAINT`), `SA-MS013` (RESUMABLE inside a user transaction / Flyway-Liquibase migration). See `references/mssql-dialect.md` → *Index Options — Valid Syntax by Statement Type*.
+5. **Procedural Code** (5 rules, MEDIUM-HIGH): error handling, transaction handling, set-based over row-by-row, avoid dynamic SQL, schema qualification
+6. **Static Analysis** (13 rules, MEDIUM-HIGH / CRITICAL): SA0001, SA0004-SA0012, SA0014-SA0016 — the cross-dialect subset of the analyzer's rule IDs that `references/universal-rules.md` documents for guidance (13 of the analyzer's 52 implemented rules; the other 39, including MSSQL-only `SA-MS011`-`SA-MS013`, are not repeated in this reference — see `references/mssql-dialect.md` → *Index Options — Valid Syntax by Statement Type* for those).
 7. **Configuration** (5 rules, MEDIUM): query analysis tools, memory, parallelism, auto-maintenance, logging/recovery
 8. **Data Types & Naming** (5 rules, MEDIUM): appropriate types, deprecated types, utf8mb4 (MySQL), strict mode, naming conventions
 9. **Data Modeling** (4 rules, MEDIUM): constraints, temporal tables, partitioning, JSON storage
-10. **Monitoring** (6 rules, LOW-MEDIUM): execution plans, wait stats, slow queries, deadlocks, index health
+10. **Monitoring** (5 rules, LOW-MEDIUM): execution plans, wait stats, slow queries, deadlocks, index health
 
 See `references/universal-rules.md` for incorrect/correct code examples per dialect.
 

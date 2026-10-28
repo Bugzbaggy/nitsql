@@ -17,8 +17,10 @@ If the user states the dialect, use it. No further detection needed.
 | `.sql` files with `pg`, `postgres`, or `pgsql` in path/name | PostgreSQL |
 | `.sql` files with `ora` or `plsql` in path/name | Oracle |
 | `.sql` files with `mysql` or `mariadb` in path/name | MySQL |
+| `.sql` files with `sqlite` or `lite` in path/name | SQLite |
 | `.pgsql` extension | PostgreSQL |
 | `.plsql`, `.pks`, `.pkb` extensions | Oracle |
+| `.sqlite`, `.db`, `.sqlite3` extensions | SQLite |
 
 ### 3. Syntax Markers
 
@@ -77,6 +79,14 @@ If the user states the dialect, use it. No further detection needed.
 - `IFNULL()`, `IF()` function
 - `STRAIGHT_JOIN`, `SQL_NO_CACHE`
 
+**SQLite:**
+- `PRAGMA journal_mode`, `PRAGMA foreign_keys`, `PRAGMA busy_timeout`
+- `AUTOINCREMENT`, `INTEGER PRIMARY KEY` (rowid alias)
+- `WITHOUT ROWID`, `STRICT` tables
+- `sqlite_master`, `sqlite_sequence`, `sqlite_version()`
+- `typeof()`, `GLOB`
+- Dot commands in scripts: `.mode`, `.headers`, `.import`
+
 ### 4. Connection Strings
 
 | Pattern | Dialect |
@@ -88,6 +98,7 @@ If the user states the dialect, use it. No further detection needed.
 | `oracle://`, `oracle+cx_oracle://`, `jdbc:oracle:thin:@` | Oracle |
 | `(DESCRIPTION=(ADDRESS=...)(CONNECT_DATA=...))` (TNS) | Oracle |
 | `mysql://`, `mysql+pymysql://`, `jdbc:mysql://` | MySQL |
+| `sqlite:///path/to/db`, `file:path?mode=ro`, `:memory:`, `jdbc:sqlite:` | SQLite |
 
 ### 5. Framework and Driver Imports
 
@@ -97,7 +108,8 @@ If the user states the dialect, use it. No further detection needed.
 | `psycopg2`, `psycopg`, `asyncpg`, `Npgsql`, `pg` (Node), `node-postgres` | PostgreSQL |
 | `cx_Oracle`, `oracledb`, `Oracle.ManagedDataAccess`, `oracle` (Node) | Oracle |
 | `mysql-connector-python`, `pymysql`, `MySqlConnector` (.NET), `mysql2` (Node) | MySQL |
+| `sqlite3` (Python built-in), `better-sqlite3` (Node), `Microsoft.Data.Sqlite` (.NET) | SQLite |
 
 ### 6. Ambiguous or Unknown Dialect
-If dialect cannot be determined, **ask the user**. Do not guess. State: "I detected SQL code but cannot determine the target RDBMS. Which dialect should I use: MSSQL, PostgreSQL, Oracle, or MySQL?"
+If dialect cannot be determined, **ask the user**. Do not guess. State: "I detected SQL code but cannot determine the target RDBMS. Which dialect should I use: MSSQL, PostgreSQL, Oracle, MySQL, or SQLite?"
 

@@ -340,26 +340,25 @@ EXECUTE IMMEDIATE 'SELECT name FROM customers WHERE id = :1' USING v_id;
 
 ### 6. Static Analysis (MEDIUM-HIGH) -- `SA****`
 
-Static analysis rules applicable across dialects. Originally from SSDT Code Analysis for MSSQL, these principles apply universally:
+Cross-dialect rules enforced by the static analyzer (`scripts/analyze_sql.py`). The IDs, descriptions, and severities below are the ones the analyzer reports, and every rule here runs on all five dialects:
 
 | Rule ID | Description | Dialects | Severity |
 |---------|-------------|----------|----------|
-| **SA0001** | `SELECT *` in production queries | All | HIGH |
-| **SA0004** | IN predicate on non-indexed columns | All | HIGH |
-| **SA0005** | LIKE patterns with leading wildcard `'%value'` | All | HIGH |
-| **SA0006** | Column reference not isolated in comparison (non-SARGable) | All | MEDIUM |
-| **SA0007** | Nullable column used without NULL handling | All | MEDIUM |
-| **SA0008** | Using non-scoped identity function | MSSQL | MEDIUM |
-| **SA0009** | VARCHAR/CHAR with unnecessarily small size | All except SQLite† | LOW |
-| **SA0010** | Deprecated join syntax | MSSQL | MEDIUM |
-| **SA0011** | Special characters in object names | All | LOW |
-| **SA0012** | Reserved words as identifiers | All | MEDIUM |
-| **SA0014** | Implicit type conversion in predicate | All‡ | HIGH |
-| **SA0015** | Non-deterministic function in WHERE clause | All | MEDIUM |
-| **SA0016** | Problematic naming prefix (`sp_` in MSSQL) | MSSQL | MEDIUM |
+| **SA0001** | `SELECT *` used in a query | All | HIGH |
+| **SA0004** | `LIKE` pattern with a leading wildcard (`'%value'`) prevents index use | All | HIGH |
+| **SA0005** | `COUNT(*)` used for an existence check -- use `EXISTS` | All | MEDIUM |
+| **SA0006** | `INSERT` without an explicit column list | All | MEDIUM |
+| **SA0007** | Cursor usage -- prefer set-based operations | All | HIGH |
+| **SA0008** | Table reference not schema-qualified | All | LOW |
+| **SA0009** | Object name contains special characters that need delimiters | All | LOW |
+| **SA0010** | Reserved word used as an identifier | All | MEDIUM |
+| **SA0011** | Arithmetic on a nullable column without a null-safe function | All | MEDIUM |
+| **SA0012** | Non-deterministic function in `WHERE`, evaluated per row | All | MEDIUM |
+| **SA0014** | Column arithmetic in `WHERE` prevents index use | All | MEDIUM |
+| **SA0015** | `UPDATE`/`DELETE` without a `WHERE` clause | All | CRITICAL |
+| **SA0016** | `UNION` where `UNION ALL` would do (forces a duplicate-elimination sort) | All | MEDIUM |
 
-† SQLite parses `VARCHAR(n)`/`CHAR(n)` but never enforces the length (type affinity only) -- an undersized declaration is misleading rather than a real sizing problem, so this rule doesn't carry the same weight there.
-‡ On SQLite, "implicit type conversion" happens by design via type affinity rather than as a driver/engine quirk; see `query-avoid-implicit-conversion` above for how the risk differs.
+The analyzer's other universal rules are covered by category 1 above: `SA0002` (SQL injection through concatenated dynamic SQL, CRITICAL), `SA0003` (non-SARGable predicate, HIGH), `SA0013` (narrowing `CAST`/`CONVERT` that can lose data, HIGH), and `SA0017`-`SA0019` (`ORDER BY` in a subquery, correlated subquery, deeply nested subqueries). Its dialect rules use their own prefixes (`SA-MS`, `SA-PG`, `SA-ORA`, `SA-MY`, `SA-LITE`). For example, `@@IDENTITY` (`SA-MS003`), `*=`/`=*` joins (`SA-MS004`), the `sp_` procedure prefix (`SA-MS005`), and undersized `VARCHAR` (`SA-MS006`) are MSSQL rules, and SQLite's unenforced `VARCHAR(n)` length is `SA-LITE005`.
 
 ### 7. Database Configuration (MEDIUM) -- `config-`
 
@@ -476,7 +475,7 @@ SET GLOBAL sql_mode = 'STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_
 **`model-partitioning`** -- Partition large tables (>10M rows or >10 GB) for manageability and query performance.
 | Dialect | Partitioning |
 |---------|-------------|
-| MSSQL | Partition function + scheme, requires Enterprise or Developer edition (Standard in 2022 for some features) |
+| MSSQL | Partition function + scheme. Available in every edition since SQL Server 2016 SP1, so in all supported (2019+) editions |
 | PostgreSQL | Declarative partitioning: `PARTITION BY RANGE/LIST/HASH` (PostgreSQL 10+) |
 | Oracle | Range, list, hash, composite partitioning. Enterprise Edition feature |
 | MySQL | `PARTITION BY RANGE/LIST/HASH/KEY` -- natively supported in InnoDB |

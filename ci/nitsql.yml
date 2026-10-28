@@ -17,14 +17,14 @@ name: nitsql
 # DEPLOYMENT — the workflow needs analyze_sql.py present in the repo. Pick one:
 #
 #   A. Vendored (recommended, self-contained):
-#      Copy plugins/nitsql/scripts/analyze_sql.py into the repo at
+#      Copy scripts/analyze_sql.py from nitsql into the repo at
 #      `.githooks/analyze_sql.py` and keep ANALYZER below as-is. Re-copy on
 #      each nitsql release so CI and the local hook stay in lockstep.
 #
-#   B. Marketplace checkout:
-#      Add a second `actions/checkout` step for example/claude-marketplace and
-#      set ANALYZER to that path, e.g.
-#        plugins/nitsql/scripts/analyze_sql.py
+#   B. Marketplace checkout (a second checkout of nitsql):
+#      Add a second `actions/checkout` step for Bugzbaggy/nitsql (for example
+#      with `path: nitsql`) and set ANALYZER to that path, e.g.
+#        nitsql/scripts/analyze_sql.py
 #
 # Suppress individual findings inline with pragmas (no config file needed):
 #   -- nitsql:ignore                 (whole line)

@@ -1,6 +1,6 @@
 # Expected Fixes for Test Application (Multi-Dialect)
 
-This document describes the expected fixes for each violation across all four supported SQL dialects.
+This document describes the expected fixes for each violation in the four `sql/procedures/bad_procedures*.sql` fixtures (MSSQL, PostgreSQL, Oracle, MySQL). The analyzer also supports SQLite, but SQLite has no bad-procedures fixture.
 
 ---
 

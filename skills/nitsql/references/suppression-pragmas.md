@@ -27,6 +27,14 @@ PostgreSQL, Oracle, MySQL, SQLite.
   verbatim.
 - A line-level pragma only affects findings whose reported line number is the
   pragma's own line. Put it on the offending statement, not a neighbouring one.
+- The rule list must be introduced with `=`. `-- nitsql:ignore SA0002` (space
+  instead of `=`) is read as a bare `-- nitsql:ignore` and suppresses **every**
+  rule on the line.
+- Do not write a reason straight after the rule list: letters, digits, `-`,
+  `,` and spaces that follow are read as part of the ID, so
+  `-- nitsql:ignore=SA0002 -- reviewed` matches nothing and the finding still
+  fires. Put the reason in a comment on the line above, or in parentheses after
+  the IDs (`-- nitsql:ignore=SA0002 (reviewed)`).
 
 ## Examples
 
@@ -51,7 +59,7 @@ Suppression is for false positives and consciously accepted risk — not for
 silencing CRITICAL security findings to get a commit through. The CI gate
 (`ci/nitsql.yml`) honours the same pragmas, so a suppressed CRITICAL
 will pass CI too. Prefer fixing; if you suppress a CRITICAL, leave a reason
-in the same comment and get it reviewed.
+in a comment on the line above and get it reviewed.
 
 ## Related dialect-specific demotions (automatic, no pragma needed)
 

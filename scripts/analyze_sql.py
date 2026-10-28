@@ -18,7 +18,7 @@ Usage:
     python analyze_sql.py --severity critical <file>
     python analyze_sql.py --fix <file>
 
-Requires: Python 3.8+  (stdlib only -- no external dependencies)
+Requires: Python 3.9+  (stdlib only -- no external dependencies)
 """
 
 from __future__ import annotations

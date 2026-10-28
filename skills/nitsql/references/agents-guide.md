@@ -1341,36 +1341,36 @@ VALUES (1001, 'shipped', NOW(), 'system');
 
 ## Category 6: Static Analysis (MEDIUM-HIGH)
 
-Universal static analysis rules. These apply across all dialects unless noted.
+Universal static analysis rules. These apply across all dialects unless noted. The Rule column names the analyzer rule (`scripts/analyze_sql.py`) that checks each item; `--` means the item is review guidance with no automated check.
 
 ### Design Issues
 
 | Rule | Check | MSSQL | PostgreSQL | Oracle | MySQL |
 |------|-------|-------|------------|--------|-------|
 | **SA0001** | `SELECT *` in queries | List explicit columns | Same | Same | Same |
-| **SA0008** | Identity/sequence misuse | Use `SCOPE_IDENTITY()` not `@@IDENTITY` | Use `RETURNING id` or `currval()` | Use `RETURNING INTO` or `.CURRVAL` | Use `LAST_INSERT_ID()` not `@@IDENTITY` |
-| **SA0009** | Oversized fixed-width types | `VARCHAR(1)` -> `CHAR(1)` | `VARCHAR(1)` -> `CHAR(1)` | `VARCHAR2(1)` -> `CHAR(1)` | `VARCHAR(1)` -> `CHAR(1)` |
-| **SA0010** | Deprecated join syntax | No `*=` / `=*` -- use ANSI JOIN | N/A (never supported) | No `(+)` -- use ANSI JOIN | N/A (never supported) |
-| **SA0013** | OUTPUT param not set in all paths | Add ELSE branch or initialize | Return all OUT params | Initialize OUT params | Set all OUT params |
-| **SA0014** | Implicit type conversion | Use explicit `CAST`/`CONVERT` | Use explicit `::type` cast | Use explicit `TO_NUMBER`/`TO_CHAR` | Use explicit `CAST()` |
+| **SA-MS003** (MSSQL) | Identity/sequence misuse | Use `SCOPE_IDENTITY()` not `@@IDENTITY` | Use `RETURNING id` or `currval()` | Use `RETURNING INTO` or `.CURRVAL` | Use `LAST_INSERT_ID()` not `@@IDENTITY` |
+| **SA-MS006** (MSSQL) | Oversized fixed-width types | `VARCHAR(1)` -> `CHAR(1)` | `VARCHAR(1)` -> `CHAR(1)` | `VARCHAR2(1)` -> `CHAR(1)` | `VARCHAR(1)` -> `CHAR(1)` |
+| **SA-MS004** (MSSQL) | Deprecated join syntax | No `*=` / `=*` -- use ANSI JOIN | N/A (never supported) | No `(+)` -- use ANSI JOIN | N/A (never supported) |
+| -- | OUTPUT param not set in all paths | Add ELSE branch or initialize | Return all OUT params | Initialize OUT params | Set all OUT params |
+| **SA-PG005** (PostgreSQL) | Implicit type conversion | Use explicit `CAST`/`CONVERT` | Use explicit `::type` cast | Use explicit `TO_NUMBER`/`TO_CHAR` | Use explicit `CAST()` |
 
 ### Performance Issues
 
 | Rule | Check | Applies To |
 |------|-------|-----------|
-| **SA0004** | Non-indexed columns in `IN` predicates | All dialects |
-| **SA0005** | `LIKE '%value'` leading wildcard -- cannot use index | All dialects |
-| **SA0006** | Column arithmetic in WHERE (`col / x > y`) | All dialects -- rewrite as `col > y * x` |
-| **SA0007** | Nullable column without null handling | MSSQL: `ISNULL()`, PG/MySQL: `COALESCE()`, Oracle: `NVL()` |
-| **SA0015** | Non-deterministic function per-row in WHERE | MSSQL: `GETDATE()`, PG: `NOW()` (stable in txn, but be aware), Oracle: `SYSDATE`, MySQL: `NOW()` -- extract to variable |
+| -- | Non-indexed columns in `IN` predicates | All dialects |
+| **SA0004** | `LIKE '%value'` leading wildcard -- cannot use index | All dialects |
+| **SA0014** | Column arithmetic in WHERE (`col / x > y`) | All dialects -- rewrite as `col > y * x` |
+| **SA0011** | Nullable column without null handling | MSSQL: `ISNULL()`, PG/MySQL: `COALESCE()`, Oracle: `NVL()` |
+| **SA0012** | Non-deterministic function per-row in WHERE | MSSQL: `GETDATE()`, PG: `NOW()` (stable in txn, but be aware), Oracle: `SYSDATE`, MySQL: `NOW()` -- extract to variable |
 
 ### Naming Issues
 
 | Rule | Check | Applies To |
 |------|-------|-----------|
-| **SA0011** | Special characters in object names | All dialects -- use letters, numbers, underscores only |
-| **SA0012** | Reserved words as identifiers | All dialects -- each has different reserved words; avoid all of them |
-| **SA0016** | `sp_` prefix on procedures (MSSQL) | MSSQL only -- `sp_` causes master DB lookup first. Use `usp_` or no prefix |
+| **SA0009** | Special characters in object names | All dialects -- use letters, numbers, underscores only |
+| **SA0010** | Reserved words as identifiers | All dialects -- each has different reserved words; avoid all of them |
+| **SA-MS005** | `sp_` prefix on procedures (MSSQL) | MSSQL only -- `sp_` causes master DB lookup first. Use `usp_` or no prefix |
 
 ### Dialect-Specific Gotchas
 

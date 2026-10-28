@@ -9,7 +9,7 @@
 #   - HIGH/MEDIUM/LOW   → warn but allow the commit
 #   - No SQL files staged → skip silently
 #
-# Install:  plugins/nitsql/hooks/install.sh
+# Install:  hooks/install.sh  (see hooks/install.sh --help)
 # Bypass:   git commit --no-verify  (use sparingly)
 
 set -euo pipefail
@@ -20,14 +20,14 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 # Resolve the analyzer path.
 #
 # Priority:
-#   1. Relative to THIS hook script (plugin layout — works for global
-#      install where core.hooksPath points into a marketplace clone).
+#   1. Relative to THIS hook script (works for a global install, where
+#      core.hooksPath points into a nitsql clone).
 #   2. Inside the current repo at common locations (when hooks are
 #      installed per-repo).
 #
 # This lets the same hook script work in three deployment modes:
-#   - Global install: core.hooksPath -> ~/claude-marketplace/plugins/nitsql/hooks
-#   - Per-repo in marketplace: plugins/nitsql/hooks/
+#   - Global install: core.hooksPath -> ~/nitsql/hooks (a nitsql clone)
+#   - Per-repo in a plugin marketplace: plugins/nitsql/hooks/
 #   - Per-repo in DB repo:     .github/nitsql/hooks/
 HOOK_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 

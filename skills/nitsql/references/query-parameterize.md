@@ -5,7 +5,7 @@
 
 ## Why It Matters
 
-SQL injection is the most exploited database vulnerability (OWASP Top 10 #3). String-concatenated queries let attackers read, modify, or delete any data, escalate privileges, or execute OS commands. Parameterized queries also enable plan caching: without them, each unique literal produces a separate compiled plan, bloating the plan cache and wasting CPU.
+SQL injection is the most exploited database vulnerability (OWASP Top 10, Injection category). String-concatenated queries let attackers read, modify, or delete any data, escalate privileges, or execute OS commands. Parameterized queries also enable plan caching: without them, each unique literal produces a separate compiled plan, bloating the plan cache and wasting CPU.
 
 ## Incorrect Code
 

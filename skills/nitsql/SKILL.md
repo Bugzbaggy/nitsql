@@ -256,7 +256,7 @@ Load `references/dialect-features.md` for full details. Key highlights per diale
 ## Scripts
 
 - `scripts/analyze_sql.py` -- Multi-dialect CLI analyzer (52 checks across 5 dialects). Use `--dialect`, `--json`, `--severity`, `--all`, `--fix`.
-- `scripts/sql_helper.py` -- Multi-dialect DB utility (schema introspection, query building, index analysis, health checks)
+- `scripts/sql_helper.py` -- Multi-dialect DB utility (schema introspection, query building, index analysis, health checks); unlike the analyzer, it needs SQLAlchemy plus the driver for your database
 - `scripts/analyze-slow-queries.sql` -- Slow query diagnostics (MSSQL, PostgreSQL, Oracle, MySQL)
 - `scripts/index-recommendations.sql` -- Missing/unused/duplicate index detection (MSSQL, PostgreSQL, Oracle, MySQL)
 - `scripts/check-indexes-{mssql,postgresql,oracle,mysql}.sql` -- Index health per dialect
@@ -268,16 +268,16 @@ Local SQL validation before each `git commit`. Auto-detects dialect per file (MS
 
 - CRITICAL findings → **block commit** (exit 1)
 - HIGH/MEDIUM/LOW → warn but allow commit
-- No SQL staged / analyzer missing / Python missing → skip silently
+- No SQL staged → skip silently; analyzer or Python missing → print a one-line notice and skip
 
 **Global install** (one-time per developer, covers all repos):
 
 ```bash
-git clone https://github.com/example/claude-marketplace ~/claude-marketplace
-~/claude-marketplace/plugins/nitsql/hooks/install.sh --global
+git clone https://github.com/Bugzbaggy/nitsql.git ~/nitsql
+~/nitsql/hooks/install.sh --global
 ```
 
-**Local install** (current repo only): `plugins/nitsql/hooks/install.sh`
+**Local install** (the repo that contains the `hooks/` folder only): `./hooks/install.sh`
 
 **Bypass a commit:** `git commit --no-verify`
 
@@ -285,7 +285,7 @@ Full install/uninstall options, coexistence notes for husky/pre-commit/lefthook/
 
 ## CI Gate (v7.0.0+)
 
-The local hook can be skipped (`--no-verify`) or never installed. For an enforcement that runs server-side on every PR, copy `ci/nitsql.yml` to a database repo's `.github/workflows/`. It analyzes the `*.sql` files changed in the PR, posts a severity summary, and fails the job on any CRITICAL finding. Auto-detects dialect, so one workflow covers all five platforms. See `references/pre-commit-hook.md` → *CI gate*.
+The local hook can be skipped (`--no-verify`) or never installed. For an enforcement that runs server-side on every PR, copy `ci/nitsql.yml` to a database repo's `.github/workflows/`. It analyzes the `*.sql` files changed in the PR or push, writes a severity summary to the job summary, and fails the job on any CRITICAL finding. Auto-detects dialect, so one workflow covers all five platforms. See `references/pre-commit-hook.md` → *CI gate*.
 
 ## Suppressing False Positives (v7.0.0+)
 
@@ -300,7 +300,7 @@ SELECT * FROM dbo.ReportView;     -- nitsql:ignore=SA0001
 
 ## Full Compiled Document
 
-`references/agents-guide.md` -- Complete 1900-line agent guide with all rules expanded across all dialects.
+`references/agents-guide.md` -- Complete ~2,000-line agent guide with all rules expanded for MSSQL, PostgreSQL, Oracle, and MySQL (SQLite guidance is in `references/sqlite-dialect.md` and `references/universal-rules.md`).
 
 ---
 

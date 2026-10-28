@@ -9,7 +9,9 @@ on:
 jobs:
   analyzer:
     name: Analyzer self-test
-    runs-on: ubuntu-latest
+    # Pinned: ubuntu-latest (26.04) has no Python 3.9 build, and 3.9 is the
+    # oldest version the README promises.
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         python-version: ['3.9', '3.12']
